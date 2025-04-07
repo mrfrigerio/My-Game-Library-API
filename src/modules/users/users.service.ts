@@ -54,17 +54,14 @@ export class UsersService {
       throw new HttpException('User already exists', HttpStatus.CONFLICT);
     }
 
-    const adress = await this.prisma.address.create({
-      data: address,
-    });
     const user = await this.prisma.user.create({
       data: {
         name,
         email,
         password_hash: await bcrypt.hash(password, 8),
         addresses: {
-          connect: {
-            id: adress.id,
+          createMany: {
+            data: address,
           },
         },
       },

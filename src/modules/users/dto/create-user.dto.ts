@@ -11,5 +11,5 @@ export class CreateUserDto {
     street: string;
     number: string;
     complement?: string;
-  };
+  }[];
 }
