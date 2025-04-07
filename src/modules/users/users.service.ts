@@ -9,13 +9,23 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async listAll(): Promise<Omit<User, 'password_hash'>[]> {
-    const users = await this.prisma.user.findMany();
+    const users = await this.prisma.user.findMany({
+      omit: {
+        password_hash: true,
+      },
+    });
     return users;
   }
 
   async findById(id: number): Promise<Omit<User, 'password_hash'>> {
     const user = await this.prisma.user.findUnique({
       where: { id },
+      include: {
+        addresses: true,
+      },
+      omit: {
+        password_hash: true,
+      },
     });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -26,6 +36,9 @@ export class UsersService {
   async findByEmail(email: string): Promise<Omit<User, 'password_hash'>> {
     const user = await this.prisma.user.findUnique({
       where: { email },
+      omit: {
+        password_hash: true,
+      },
     });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -75,20 +88,17 @@ export class UsersService {
     return user;
   }
 
-  async checkUserPassword(
-    email: string,
-    password: string,
-  ): Promise<User | null> {
+  async checkUserPassword(email: string, password: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
     if (!user) {
-      return null;
+      return false;
     }
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
-      return null;
+      return false;
     }
-    return user;
+    return true;
   }
 }
