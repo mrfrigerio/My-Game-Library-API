@@ -11,8 +11,7 @@ export class AppController {
   }
 
   @Get(':id')
-  findOne(@Param() params: { id: string }): string {
-    const { id } = params;
+  findOne(@Param('id') id: string): string {
     return `This action returns a #${id} item`;
   }
 }
