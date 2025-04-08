@@ -9,7 +9,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(@Body() credentials: AuthDto) {
-    const { username, password } = credentials;
-    return this.authService.signIn(username, password);
+    const { email, password } = credentials;
+    return this.authService.signIn(email, password);
   }
 }

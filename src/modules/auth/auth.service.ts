@@ -10,15 +10,15 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
   async signIn(
-    username: string,
+    email: string,
     password: string,
   ): Promise<(Omit<User, 'password_hash'> & { access_token: string }) | Error> {
-    const user = await this.usersService.findByEmail(username);
+    const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new HttpException('Usuário não encontrado!', HttpStatus.NOT_FOUND);
     }
     const isPasswordValid = await this.usersService.checkUserPassword(
-      username,
+      email,
       password,
     );
     if (!isPasswordValid) {

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -59,7 +60,7 @@ export class UsersService {
   }
 
   async create(userData: CreateUserDto): Promise<Omit<User, 'password_hash'>> {
-    const { name, email, password, address } = userData;
+    const { name, email, password } = userData;
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -72,11 +73,11 @@ export class UsersService {
         name,
         email,
         password_hash: await bcrypt.hash(password, 8),
-        addresses: {
-          createMany: {
-            data: address,
-          },
-        },
+        // addresses: {
+        //   createMany: {
+        //     data: address ?? [],
+        //   },
+        // },
       },
       include: {
         addresses: true,
@@ -100,5 +101,49 @@ export class UsersService {
       return false;
     }
     return true;
+  }
+
+  async update(
+    id: number,
+    userData: UpdateUserDto,
+  ): Promise<Omit<User, 'password_hash'>> {
+    const { name, email, password, address } = userData;
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id },
+    });
+    if (!existingUser) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    //Update address
+    if (address?.length > 0) {
+      await this.prisma.address.deleteMany({
+        where: { userId: id },
+      });
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: {
+        name,
+        email,
+        password_hash: password
+          ? await bcrypt.hash(password, 8)
+          : existingUser.password_hash,
+        addresses: {
+          createMany: {
+            data: address,
+          },
+        },
+      },
+
+      include: {
+        addresses: true,
+      },
+      omit: {
+        password_hash: true,
+      },
+    });
+    return updatedUser;
   }
 }

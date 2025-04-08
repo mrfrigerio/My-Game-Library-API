@@ -6,11 +6,13 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -30,6 +32,14 @@ export class UsersController {
   @Post()
   async create(@Body() body: CreateUserDto) {
     return this.usersService.create(body);
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateUserDto,
+  ) {
+    return this.usersService.update(id, body);
   }
 
   @Delete(':id')
