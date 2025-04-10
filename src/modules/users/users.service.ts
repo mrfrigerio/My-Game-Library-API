@@ -37,6 +37,9 @@ export class UsersService {
   async findByEmail(email: string): Promise<Omit<User, 'password_hash'>> {
     const user = await this.prisma.user.findUnique({
       where: { email },
+      include: {
+        addresses: true,
+      },
       omit: {
         password_hash: true,
       },
@@ -60,7 +63,7 @@ export class UsersService {
   }
 
   async create(userData: CreateUserDto): Promise<Omit<User, 'password_hash'>> {
-    const { name, email, password } = userData;
+    const { name, email, password, addresses } = userData;
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -73,11 +76,11 @@ export class UsersService {
         name,
         email,
         password_hash: await bcrypt.hash(password, 8),
-        // addresses: {
-        //   createMany: {
-        //     data: address ?? [],
-        //   },
-        // },
+        addresses: {
+          createMany: {
+            data: addresses ?? [],
+          },
+        },
       },
       include: {
         addresses: true,
@@ -107,7 +110,7 @@ export class UsersService {
     id: number,
     userData: UpdateUserDto,
   ): Promise<Omit<User, 'password_hash'>> {
-    const { name, email, password, address } = userData;
+    const { name, email, password, addresses } = userData;
     const existingUser = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -115,8 +118,8 @@ export class UsersService {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    //Update address
-    if (address?.length > 0) {
+    //Update addresses
+    if (addresses?.length > 0) {
       await this.prisma.address.deleteMany({
         where: { userId: id },
       });
@@ -132,7 +135,7 @@ export class UsersService {
           : existingUser.password_hash,
         addresses: {
           createMany: {
-            data: address,
+            data: addresses,
           },
         },
       },
