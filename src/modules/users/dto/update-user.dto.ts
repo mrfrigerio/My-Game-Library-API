@@ -3,7 +3,7 @@ export class UpdateUserDto {
   name: string;
   email: string;
   password: string;
-  address: {
+  addresses: {
     type: string;
     zip_code: string;
     state: string;
